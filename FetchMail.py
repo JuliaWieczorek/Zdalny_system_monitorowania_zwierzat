@@ -5,6 +5,7 @@ from PIL import Image, ImageTk
 import os
 
 class MainApplication(tk.Frame):
+
     def __init__(self, parent, *args, **kwargs):
         # tk.Frame.__init__(self, parent, *args, **kwargs)
         tk.Frame.__init__(self, root)
@@ -28,57 +29,12 @@ class MainApplication(tk.Frame):
 
         self.scrollFrame.pack(side='top', fill='both', expand=True)
 
-
-        # TODO: połaczyć z Clientem!!!!!
-        self.logowanie()
+        self.client = Client()
 
     def printMsg(self, msg):
         print(msg)
 
-    def logowanie(self):
-        # self.screen = tk.Tk()
-        self.screen = tk.Toplevel()
-        self.screen.title("Log in")  # panel logowania
-        # Gets the requested values of the height and widht.
-        windowWidth = root.winfo_reqwidth()
-        windowHeight = root.winfo_reqheight()
-        positionRight = int(self.screen.winfo_screenwidth() / 2 - windowWidth / 2)
-        positionDown = int(self.screen.winfo_screenheight() / 2 - windowHeight / 2)
-        # Positions the window in the center of the page.
-        self.screen.geometry("250x160+{}+{}".format(positionRight, positionDown))
-        self.screen.configure(background='dim gray')
-        # screen.geometry("210x170")
-        self.screen.grid_columnconfigure(0, weight=1)
-        self.screen.grid_rowconfigure(0, weight=1)
-        tk.Label(self.screen, text=' ', bg='dim gray').grid(column=0, row=1)
-
-        tk.Label(self.screen, text="email", bg='dim gray').grid(column=0, row=2)
-        self.email = tk.Entry(self.screen, width=20)
-        self.email.grid(column=1, row=2)
-
-        tk.Label(self.screen, text='password', bg='dim gray').grid(column=0, row=3)
-        self.password = tk.Entry(self.screen, width=20)
-        self.password.grid(column=1, row=3)
-
-        # self.dane = [self.email.cget("text"), self.password.cget("text")]
-
-        # self.client = Client(self.dane[0], self.dane[1])
-        # self.client = Client(self.get_label(self.email), self.get_label(self.password))
-        # self.client = Client('mgrphototrap@onet.pl', 'Mgr.Photo.Trap.1')
-        self.client = Client(self.email.cget("text"), self.password.cget("text"))
-
-        tk.Label(self.screen, text=' ', bg='dim gray').grid(column=4, row=4)
-        tk.Button(self.screen, text="Log in", command=self.login, bg='AntiqueWhite2').grid(columnspan=4, row=5)
-        # tk.Button(self.screen, text="Log in", command=self.client.printuj, bg='AntiqueWhite2').grid(columnspan=4, row=5)
-        # tk.Button(self.screen, text="Log in", command=self.printuj, bg='AntiqueWhite2').grid(columnspan=4, row=5)
-
-        # self.client.message = tk.Label(self.screen, bg='dim gray')
-        # self.client.message.grid(columnspan=4, row=7)
-        self.message = tk.Label(self.screen, bg='dim gray')
-        self.message.grid(columnspan=4, row=7)
-
-        # self.screen.call('wm', 'attributes', '.', '-topmost', '1')
-
+    #tutaj było def logowanie()
     def login(self):
         try:
             imap = imaplib.IMAP4_SSL("imap.poczta.onet.pl", 993)
@@ -96,8 +52,22 @@ class MainApplication(tk.Frame):
     #    self.variable = variable
     #    return self.variable.get()
 
-    # def printuj(self):
-    #    print(self.get_label(self.email), self.get_label(self.password))
+    def printuj(self):
+        print(self.textA.get())
+
+    def _show_value(*pargs):
+        # print(*pargs)
+        return(root.globalgetvar(pargs[0]))
+
+    def recupere(self):
+        "Function to get the variable"
+        dev = self.dev_var.get()
+        return self.dev_var.set(dev)
+
+    def show_output(self, event):
+        print(self.entry_var.get())
+
+
 
 class ScrollFrame(tk.Frame):
     def __init__(self, parent):
@@ -189,41 +159,62 @@ class FetchEmail(object):
 
 class Client(object):
 
-    # TODO: połączyć z MainApp powinno być self.client(self.main.get(), self.main.password())
+    # TODO: zrobić funkcjonalne dla innych poczt (słownik z liczbami do imapu?)
 
     ID_default = 1
     list_of_clients = []
 
-    def __init__(self, mail, password):
+    def __init__(self):
+        # self.screen = tk.Tk()
+        self.screen = tk.Toplevel()
+        self.screen.title("Log in")  # panel logowania
+        # Gets the requested values of the height and widht.
+        windowWidth = root.winfo_reqwidth()
+        windowHeight = root.winfo_reqheight()
+        positionRight = int(self.screen.winfo_screenwidth() / 2 - windowWidth / 2)
+        positionDown = int(self.screen.winfo_screenheight() / 2 - windowHeight / 2)
+        # Positions the window in the center of the page.
+        self.screen.geometry("250x160+{}+{}".format(positionRight, positionDown))
+        self.screen.configure(background='dim gray')
+        # screen.geometry("210x170")
+        self.screen.grid_columnconfigure(0, weight=1)
+        self.screen.grid_rowconfigure(0, weight=1)
+        tk.Label(self.screen, text=' ', bg='dim gray').grid(column=0, row=1)
+
+        tk.Label(self.screen, text="email", bg='dim gray').grid(column=0, row=2)
+        self.email = tk.Entry(self.screen, width=20)
+        self.email.grid(column=1, row=2)
+
+        tk.Label(self.screen, text='password', bg='dim gray').grid(column=0, row=3)
+        self.password = tk.Entry(self.screen, width=20)
+        self.password.grid(column=1, row=3)
+
+        tk.Label(self.screen, text=' ', bg='dim gray').grid(column=4, row=4)
+        tk.Button(self.screen, text="Log in", command=self.log_in, bg='AntiqueWhite2').grid(columnspan=4, row=5)
+
+        self.message = tk.Label(self.screen, bg='dim gray')
+        self.message.grid(columnspan=4, row=7)
+
+        # self.screen.call('wm', 'attributes', '.', '-topmost', '1')
+
+    def client(self, mail, password):
         self.client_ID = Client.ID_default
         Client.ID_default = Client.ID_default + 1
         self.mail = mail
         self.password = password
-        self.logged = 0  # zalogowany
         self.__class__.list_of_clients.append(self)
 
     def log_in(self):
-
-        if (self.logged == 0):
-            try:
-                imap = imaplib.IMAP4_SSL("imap.poczta.onet.pl", 993)
-                imap.login(self.mail, self.password)
-                print(self.mail, self.password, 'try')
-                print("Login accepted")
-                self.message['text'] = 'Login accepted'
-                self.logged = 1
-                self.screen.after(1000, self.screen.destroy)
-            except:
-                print(self.mail, self.password, 'except')
-                print("An exception occurred")
-                self.message['text'] = 'Incorrect email or password'  # invalid?
-
-        else:
-            print("You are already logged in")
-            self.message['text'] = "You are already logged in"  # invalid?
-
-    def printuj(self):
-        print(type(self.mail), self.password)  ## nie
+        try:
+            imap = imaplib.IMAP4_SSL("imap.poczta.onet.pl", 993)
+            imap.login(self.email.get(), self.password.get())
+            print("Login accepted")
+            self.message['text'] = 'Login accepted'
+            self.screen.after(1000, self.screen.destroy)
+            self.client(self.email.get(), self.password.get())
+        except:
+            print("An exception occurred")
+            self.message['text'] = 'Incorrect email or password'
 
 class CNN(object):
     # TODO: sprawdzić czy działa
