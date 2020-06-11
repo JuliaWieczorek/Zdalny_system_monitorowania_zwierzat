@@ -4,34 +4,31 @@ import tkinter as tk
 from PIL import Image, ImageTk
 import os
 import shutil
+from settings import path_to_images
 
 class MainApplication(tk.Frame):
-
-    path = ''
+    """TWORZY INTERFEJS PROGRAMU
+        PRZEKIEROWUJE DO KLASY KLIENT"""
 
     def __init__(self, parent, *args, **kwargs):
         # tk.Frame.__init__(self, parent, *args, **kwargs)
         tk.Frame.__init__(self, root)
-        root.title("Name")
+        root.title("Name") #TODO: nazwać okienko
         bg_image = tk.PhotoImage(file="background-869596_1280.png")
         # background = tk.Label(image=bg_image)
         # background.image = bg_image
         # background.pack()
         self.scrollFrame = ScrollFrame(self)
 
-        script_path = os.path.abspath(__file__) 
-        script_dir = os.path.split(script_path)[0] 
-        path_dirname = script_dir.replace('\\', '/')
-        rel_path = "classification_images/cats_and_dogs_filtered/train/cats"
-        path = os.path.join(path_dirname, rel_path)
-        path = path.replace('\\', '/')
-        
+        rel_path = "train/cats"
+        path_train = os.path.join(path, rel_path)
+
         i = 0
-        for name in os.listdir(path):
+        for name in os.listdir(path_train):
             # image = tk.PhotoImage(path + "/" + name)
             # DetectionImage.detection()
             # im = Image.open(path + "/" + name).resize((250, 250))
-            path_to_image = os.path.join(path, name)
+            path_to_image = os.path.join(path_train, name)
             path_to_image = path_to_image.replace('\\', '/')
             im = Image.open(path_to_image).resize((250,250))
             ph = ImageTk.PhotoImage(im)
@@ -45,6 +42,7 @@ class MainApplication(tk.Frame):
 
     def printMsg(self, msg):
         print(msg)
+
 '''
     #tutaj było def logowanie()
     def login(self):
@@ -113,6 +111,7 @@ class ScrollFrame(tk.Frame):
                                width=canvas_width)  # whenever the size of the canvas changes alter the window region respectively.
 
 class FetchEmail(object):
+    """ZAPISUJE ZAŁĄCZNIKI NIEPRZECZYTANYCH MAILI"""
 
     # TODO: połaczyć z CNN
     filePath = ''
@@ -134,7 +133,7 @@ class FetchEmail(object):
         imap.logout()
 
     def read(username, password):
-        #TODO: sprawdzic czy działa zapisywanie i optwieranie path
+        #TODO: sprawdzic czy działa zapisywanie i otwieranie path
         imap = imaplib.IMAP4_SSL("imap.poczta.onet.pl", 993)
         imap.login(username, password)
         print("login accepted")
@@ -153,7 +152,7 @@ class FetchEmail(object):
                     continue
                 fileName = part.get_filename()
                 if bool(fileName):
-                    filePath = os.path.join(MainApplication.path, fileName)
+                    filePath = os.path.join(path, fileName)
                     if not os.path.isfile(filePath):
                         fp = open(filePath, 'wb')
                         fp.write(part.get_payload(decode=True))
@@ -170,6 +169,7 @@ class FetchEmail(object):
                     print(msg.get_payload(decode=True))'''
 
 class Client(object):
+    """LOGOWANIE DO MAILA"""
 
     ID_default = 1
     list_of_clients = []
@@ -238,17 +238,10 @@ class CNN(object):
 
         try:
             self.sess = tf.compat.v1.Session()
-            self.model = keras.models.load_model('convnet_cifar10.kerasave')
+            self.model = keras.models.load_model('model.kerasave')
             self.classifier()
         except:
-            exec(open('settings.py').read())
-            exec(open("functions.py").read())
-            exec(open("sample_images.py").read())
-            exec(open("model.py").read())
-            exec(open("model_analysis.py").read())
-            exec(open("init_training.py").read())
-            exec(open("long_training.py").read())
-            exec(open("short_training.py").read())
+            exec(open('CNN_classification.py.py').read())
             self.classifier()
 
     def classifier(self):
@@ -271,19 +264,18 @@ class CNN(object):
         self.pred = self.model.predict(self.img)
         self.pred = labels["label_names"][np.argmax(self.pred)]
         print(self.pred)
-        shutil.move(self.image, MainApplication.path+self.pred)
-
-
+        shutil.move(self.image, path+self.pred)
 
 
 # server = 'imap.poczta.onet.pl'
-username = 'mgrphototrap@onet.pl'
-password = 'Mgr.Photo.Trap.1'
+# username = 'mgrphototrap@onet.pl'
+# password = 'Mgr.Photo.Trap.1'
 # folder = 'C:/Users/julia/Documents/bioinformatyka/mgr'
-
+path = ''
 if __name__ == "__main__":
     root = tk.Tk()
     bg_image = tk.PhotoImage(file="background-869596_1280.png")
+    path = path_to_images()
     MainApplication(root, bg=bg_image).pack(side="top", fill="both", expand=True)
     # background = tk.Label(image=bg_image)
     # background.image = bg_image
