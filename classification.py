@@ -176,7 +176,6 @@ def example_work():
     # jedno zdjęcie przy różnych kątach
 
 def fit_model():
-    # TODO: tu skończyłam
     x = training()
     epochs = 3 if FAST_RUN else 50
     model = create_model()
@@ -190,19 +189,21 @@ def fit_model():
     # early stop callback, given a bit more leeway
     stahp = EarlyStopping(min_delta=0.00001, patience=25)
 
-    res_dir = x + 'results'
+    from settings import path_to_images
+    y = path_to_images()
+    res_dir = y + 'results'
     if not os.path.isdir(res_dir):
         os.makedirs(os.path.join(res_dir))
     model_path = os.path.join(res_dir, "model.kerasave")
     model.save(model_path)
-
-
 
 def load_session():
     """LOAD LAST SESSION"""
     sess = tf.compat.v1.Session()
     model = keras.models.load_model('model.h5')
     model.load_weights('model.h5')
+
+load_session()
 
 def virtualize_training():
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12))
