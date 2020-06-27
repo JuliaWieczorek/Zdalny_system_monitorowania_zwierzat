@@ -106,7 +106,7 @@ def model_analysis():
     plot_model(model, to_file=path, show_layer_names=True, show_shapes=True, rankdir="TB")
     print(model.summary())
 
-# TODO: model_analysis()
+# model_analysis()
 
 def training():
     """TRAINING
@@ -197,15 +197,6 @@ def fit_model():
     model_path = os.path.join(res_dir, "model.kerasave")
     model.save(model_path)
 
-def load_session():
-    """LOAD LAST SESSION"""
-    sess = tf.compat.v1.Session()
-    model = keras.models.load_model('model.h5')
-    model.load_weights('model.h5')
-
-load_session()
-
-def virtualize_training():
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12))
     ax1.plot(history.history['loss'], color='b', label="Training loss")
     ax1.plot(history.history['val_loss'], color='r', label="validation loss")
@@ -213,14 +204,22 @@ def virtualize_training():
     ax1.set_yticks(np.arange(0, 1, 0.1))
 
     ax2.plot(history.history['accuracy'], color='b', label="Training accuracy")
-    ax2.plot(history.history['val_acc'], color='r', label="Validation accuracy")
+    ax2.plot(history.history['val_accuracy'], color='r', label="Validation accuracy")
     ax2.set_xticks(np.arange(1, epochs, 1))
 
     legend = plt.legend(loc='best', shadow=True)
     plt.tight_layout()
     plt.show()
 
-def prepare_testing():
+def load_session():
+    """LOAD LAST SESSION"""
+    sess = tf.compat.v1.Session()
+    # model = keras.models.load_model('model.h5')
+    filepath = os.path.join("classification_images/cats_and_dogs_filteredresults/model.kerasave")
+    model = keras.models.load_model(filepath)
+    model.load_weights(filepath)
+
+def create_test_generator():
     """PREPARE TESTING DATA"""
     path = path_to_images()
     path = os.path.join(path, "validation")
@@ -229,13 +228,34 @@ def prepare_testing():
     test_df = pd.DataFrame({'filename': test_filenames})
     nb_samples = test_df.shape[0]
 
-def create_test_generator():
     """CREATE TESTING GENERATOR"""
+    batch_size = 15
     test_gen = ImageDataGenerator(rescale=1. / 255)
     test_generator = test_gen.flow_from_dataframe(test_df, path, x_col='filename', y_col=None, class_mode=None,
                                                   target_size=IMAGE_SIZE, batch_size=batch_size, shuffle=False)
 
 def predict():
+    sess = tf.compat.v1.Session()
+    # model = keras.models.load_model('model.h5')
+    filepath = os.path.join("classification_images/cats_and_dogs_filteredresults/model.kerasave")
+    model = keras.models.load_model(filepath)
+    model.load_weights(filepath)
+
+    """PREPARE TESTING DATA"""
+    path = path_to_images()
+    path = os.path.join(path, "validation")
+    path = path.replace('\\', '/')
+    test_filenames = os.listdir(path)
+    test_df = pd.DataFrame({'filename': test_filenames})
+    nb_samples = test_df.shape[0]
+
+    """CREATE TESTING GENERATOR"""
+    batch_size = 15
+    test_gen = ImageDataGenerator(rescale=1. / 255)
+    test_generator = test_gen.flow_from_dataframe(test_df, path, x_col='filename', y_col=None, class_mode=None,
+                                                  target_size=IMAGE_SIZE, batch_size=batch_size, shuffle=False)
+
+
     predict = model.predict_generator(test_generator, steps=np.ceil(nb_samples / batch_size))
 
     test_df['category'] = np.argmax(predict, axis=-1)
@@ -267,3 +287,4 @@ def submission():
     submission_df.drop(['filename', 'category'], axis=1, inplace=True)
     submission_df.to_csv('submission.csv', index=False)
 
+predict()
