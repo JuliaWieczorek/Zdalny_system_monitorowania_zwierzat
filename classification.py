@@ -43,6 +43,7 @@ def plot():
     df['category'].value_counts().plot.bar()
     plt.show()
 
+
 def random_image():
     """SHOW RANDOM IMAGE"""
     data = prepare_data()
@@ -106,7 +107,6 @@ def model_analysis():
     plot_model(model, to_file=path, show_layer_names=True, show_shapes=True, rankdir="TB")
     print(model.summary())
 
-# model_analysis()
 
 def training():
     """TRAINING
@@ -174,6 +174,7 @@ def example_work():
     plt.tight_layout()
     plt.show()
     # jedno zdjęcie przy różnych kątach
+example_work()
 
 def fit_model():
     x = training()
@@ -210,7 +211,6 @@ def fit_model():
     legend = plt.legend(loc='best', shadow=True)
     plt.tight_layout()
     plt.show()
-
 def load_session():
     """LOAD LAST SESSION"""
     sess = tf.compat.v1.Session()
@@ -219,33 +219,21 @@ def load_session():
     model = keras.models.load_model(filepath)
     model.load_weights(filepath)
 
-def create_test_generator():
-    """PREPARE TESTING DATA"""
-    path = path_to_images()
-    path = os.path.join(path, "validation")
-    path = path.replace('\\', '/')
-    test_filenames = os.listdir(path)
-    test_df = pd.DataFrame({'filename': test_filenames})
-    nb_samples = test_df.shape[0]
-
-    """CREATE TESTING GENERATOR"""
-    batch_size = 15
-    test_gen = ImageDataGenerator(rescale=1. / 255)
-    test_generator = test_gen.flow_from_dataframe(test_df, path, x_col='filename', y_col=None, class_mode=None,
-                                                  target_size=IMAGE_SIZE, batch_size=batch_size, shuffle=False)
-
 def predict():
+    # x = training()
+
     sess = tf.compat.v1.Session()
     # model = keras.models.load_model('model.h5')
     filepath = os.path.join("classification_images/cats_and_dogs_filteredresults/model.kerasave")
     model = keras.models.load_model(filepath)
-    model.load_weights(filepath)
+    model.load_weights('model.h5')
 
     """PREPARE TESTING DATA"""
     path = path_to_images()
     path = os.path.join(path, "validation")
     path = path.replace('\\', '/')
     test_filenames = os.listdir(path)
+
     test_df = pd.DataFrame({'filename': test_filenames})
     nb_samples = test_df.shape[0]
 
@@ -255,10 +243,11 @@ def predict():
     test_generator = test_gen.flow_from_dataframe(test_df, path, x_col='filename', y_col=None, class_mode=None,
                                                   target_size=IMAGE_SIZE, batch_size=batch_size, shuffle=False)
 
-
     predict = model.predict_generator(test_generator, steps=np.ceil(nb_samples / batch_size))
 
     test_df['category'] = np.argmax(predict, axis=-1)
+
+    train_generator = train_generator
 
     label_map = dict((v, k) for k, v in train_generator.class_indices.items())
     test_df['category'] = test_df['category'].replace(label_map)
@@ -280,6 +269,8 @@ def predict():
     plt.tight_layout()
     plt.show()
 
+# predict()
+
 def submission():
     submission_df = test_df.copy()
     submission_df['id'] = submission_df['filename'].str.split('.').str[0]
@@ -287,4 +278,3 @@ def submission():
     submission_df.drop(['filename', 'category'], axis=1, inplace=True)
     submission_df.to_csv('submission.csv', index=False)
 
-predict()
