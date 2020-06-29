@@ -93,8 +93,7 @@ path_dirname = os.path.split(path_dirname)[0]
 path_dirname = path_dirname.replace('\\', '/')
 rel_path = "results/model.svg"
 path_model = os.path.join(path_dirname, rel_path)
-path_model = path.replace('\\', '/')
-print(path_model)
+path_model = path_model.replace('\\', '/')
 
 model.summary()
 plot_model(model, to_file=path_model, show_layer_names=True, show_shapes=True, rankdir="TB")
@@ -183,7 +182,7 @@ ax1.set_xticks(np.arange(1, epochs, 1))
 ax1.set_yticks(np.arange(0, 1, 0.1))
 
 ax2.plot(history.history['accuracy'], color='b', label="Training accuracy")
-ax2.plot(history.history['val_acc'], color='r',label="Validation accuracy")
+ax2.plot(history.history['val_accuracy'], color='r',label="Validation accuracy")
 ax2.set_xticks(np.arange(1, epochs, 1))
 
 legend = plt.legend(loc='best', shadow=True)

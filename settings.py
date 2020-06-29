@@ -18,6 +18,15 @@ def path_to_images():
     path = path.replace('\\', '/')
     return path
 
+def path_to_chicken():
+    script_path = os.path.abspath(__file__)
+    script_dir = os.path.split(script_path)[0]
+    path_dirname = script_dir.replace('\\', '/')
+    rel_path = "classification_images/chicken"
+    path = os.path.join(path_dirname, rel_path)
+    filePath = path.replace('\\', '/')
+    return filePath
+
 x = path_to_images()
 save_dir = x + 'work'
 res_dir = x + 'results'

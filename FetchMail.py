@@ -4,7 +4,7 @@ import tkinter as tk
 from PIL import Image, ImageTk
 import os
 import shutil
-from settings import path_to_images
+from settings import path_to_images, path_to_chicken
 
 class MainApplication(tk.Frame):
     """TWORZY INTERFEJS PROGRAMU
@@ -20,8 +20,9 @@ class MainApplication(tk.Frame):
         # background.pack()
         self.scrollFrame = ScrollFrame(self)
 
-        rel_path = "train/cats"
-        path_train = os.path.join(path, rel_path)
+        # rel_path = "train/cats"
+        # path_train = os.path.join(path, rel_path)
+        path_train = path_to_chicken()
 
         i = 0
         for name in os.listdir(path_train):
@@ -114,12 +115,38 @@ class FetchEmail(object):
     """ZAPISUJE ZAŁĄCZNIKI NIEPRZECZYTANYCH MAILI"""
 
     # TODO: połaczyć z CNN
-    filePath = ''
+    # filePath = path_to_images()
+    def __init__(self, username, password):
 
-    def unread(username, password):
-        imap = imaplib.IMAP4_SSL("imap.poczta.onet.pl", 993)
-        imap.login(username, password)
+        script_path = os.path.abspath(__file__)
+        script_dir = os.path.split(script_path)[0]
+        path_dirname = script_dir.replace('\\', '/')
+        rel_path = "classification_images/chicken"
+        path = os.path.join(path_dirname, rel_path)
+        filePath = path.replace('\\', '/')
+        path = filePath
+
+        self.username = username
+        self.password = password
+        domena = self.username.split('@')[1]
+        domena = 'imap.poczta.' + domena
+        imap = imaplib.IMAP4_SSL(domena, 993)
+        imap.login(self.username, self.password)
+        print("login accepted")
         imap.select('INBOX')
+
+        self.unread(imap)
+        self.read(imap)
+
+    def unread(self, imap):
+        # print(self.username, self.password)
+        print('unread')
+        # self.username = username
+        # self.password = password
+        # print(self.username, self.password)
+        # imap = imaplib.IMAP4_SSL("imap.poczta.onet.pl", 993)
+        # imap.login(self.username, self.password)
+        # imap.select('INBOX')
 
         status, response = imap.search(None, '(UNSEEN)')
         unread_msg_nums = response[0].split()
@@ -132,12 +159,17 @@ class FetchEmail(object):
             typ, data = imap.fetch(num, '(RFC822)')
         imap.logout()
 
-    def read(username, password):
+    def read(self, imap):
         #TODO: sprawdzic czy działa zapisywanie i otwieranie path
-        imap = imaplib.IMAP4_SSL("imap.poczta.onet.pl", 993)
-        imap.login(username, password)
-        print("login accepted")
-        imap.select("INBOX")
+        print('read')
+        # self.username = username
+        # self.password = password
+        # domena = self.username.split('@')[1]
+        # domena = 'imap.poczta.' + domena
+        # imap = imaplib.IMAP4_SSL(domena, 993)
+        # imap.login(self.username, self.password)
+        # print("login accepted")
+        # imap.select("INBOX")
         typ, data = imap.search(None, 'UNSEEN')
         for num in data[0].split():
             typ, data = imap.fetch(num, '(RFC822)')
@@ -159,14 +191,6 @@ class FetchEmail(object):
                         fp.close()
                         # subject = str(email_message).split("Subject: ", 1)[1].split("\nTo:", 1)[0]
                     #  print('Downloaded "{file}" from email titled "{subject}" with UID {uid}.'.format(file=fileName, subject=subject,uid=latest_email_uid.decode('utf-8')))
-            '''for response_part in data:
-                if isinstance(response_part, tuple):
-                    msg = email.message_from_string(response_part[1].decode('utf-8'))
-                    email_subject = msg['subject']
-                    email_from = msg['from']
-                    print('From : ' + email_from + '\n')
-                    print('Subject : ' + email_subject + '\n')
-                    print(msg.get_payload(decode=True))'''
 
 class Client(object):
     """LOGOWANIE DO MAILA"""
@@ -209,7 +233,9 @@ class Client(object):
 
     def client(self, mail, password):
         self.client_ID = Client.ID_default
+        print(self.client_ID)
         Client.ID_default = Client.ID_default + 1
+        print(Client.client_ID)
         self.mail = mail
         self.password = password
         self.__class__.list_of_clients.append(self)
@@ -224,7 +250,10 @@ class Client(object):
             print("Login accepted")
             self.message['text'] = 'Login accepted'
             self.screen.after(1000, self.screen.destroy)
-            self.client(self.email.get(), self.password.get())
+            print('log_in 1')
+            FetchEmail(self.email.get(), self.password.get())
+            print('log_in 2')
+            # self.client(self.email.get(), self.password.get())
         except:
             print("An exception occurred")
             self.message['text'] = 'Incorrect email or password'
@@ -232,9 +261,10 @@ class Client(object):
 class CNN(object):
     # TODO: sprawdzić czy działa
 
-    def __init__(self):
+    def __init__(self, path_img):
         import keras
         import tensorflow as tf
+        self.path_img = path_img
 
         try:
             self.sess = tf.compat.v1.Session()
@@ -242,7 +272,6 @@ class CNN(object):
             self.classifier()
         except:
             exec(open('CNN_classification.py.py').read())
-            self.classifier()
 
     def classifier(self):
         # TODO: sprawdzic czy działa cała funkcja: plik z maila, klasyfikacja zgodna z modelem, przeniesienie do pliku
@@ -252,8 +281,7 @@ class CNN(object):
 
         _, _, _, _, labels = setup_load_cifar()
 
-        self.image = tf.io.read_file(FetchEmail.filePath)
-        # self.img = tf.io.read_file('C:/Users/julia/Documents/bioinformatyka/classification_images/cats_and_dogs_filtered/cat.1.jpg')
+        self.image = tf.io.read_file(self.path_img)
         self.img = tf.image.decode_jpeg(self.image, channels=3)
         self.img.set_shape([None, None, 3])
         self.img = tf.image.resize(self.img, (32, 32))
@@ -264,14 +292,16 @@ class CNN(object):
         self.pred = self.model.predict(self.img)
         self.pred = labels["label_names"][np.argmax(self.pred)]
         print(self.pred)
-        shutil.move(self.image, path+self.pred)
+        shutil.move(self.image, self.path_imgh+self.pred)
 
 
 # server = 'imap.poczta.onet.pl'
 # username = 'mgrphototrap@onet.pl'
 # password = 'Mgr.Photo.Trap.1'
-# folder = 'C:/Users/julia/Documents/bioinformatyka/mgr'
-path = ''
+
+# e: photo.trap@onet.pl
+# h: mgr.Photo.Trap.1
+path = 'images'
 if __name__ == "__main__":
     root = tk.Tk()
     bg_image = tk.PhotoImage(file="background-869596_1280.png")

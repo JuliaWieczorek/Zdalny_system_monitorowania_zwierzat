@@ -106,7 +106,7 @@ def model_analysis():
 
     plot_model(model, to_file=path, show_layer_names=True, show_shapes=True, rankdir="TB")
     print(model.summary())
-
+model_analysis()
 
 def training():
     """TRAINING
