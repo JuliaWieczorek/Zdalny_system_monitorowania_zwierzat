@@ -13,17 +13,17 @@ class MainApplication(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         # tk.Frame.__init__(self, parent, *args, **kwargs)
         tk.Frame.__init__(self, root)
-        root.title("Name") #TODO: nazwać okienko
+        root.title("Animal monitoring system")
         bg_image = tk.PhotoImage(file="background-869596_1280.png")
-        # background = tk.Label(image=bg_image)
-        # background.image = bg_image
-        # background.pack()
+        self.button1 = tk.Button(root, text="Display images", command=self.display_images).pack()
         self.scrollFrame = ScrollFrame(self)
+        self.client = Client()
 
-        # rel_path = "train/cats"
-        # path_train = os.path.join(path, rel_path)
+    def printMsg(self, msg):
+        print(msg)
+
+    def display_images(self):
         path_train = path_to_chicken()
-
         i = 0
         for name in os.listdir(path_train):
             # image = tk.PhotoImage(path + "/" + name)
@@ -31,53 +31,16 @@ class MainApplication(tk.Frame):
             # im = Image.open(path + "/" + name).resize((250, 250))
             path_to_image = os.path.join(path_train, name)
             path_to_image = path_to_image.replace('\\', '/')
-            im = Image.open(path_to_image).resize((250,250))
+            im = Image.open(path_to_image).resize((250, 250))
+            # CNN(path_to_image) #TODO: CNN
             ph = ImageTk.PhotoImage(im)
             label = tk.Label(self.scrollFrame.viewPort, image=ph, borderwidth="1", relief="solid")
             label.image = ph
             label.pack()
-
         self.scrollFrame.pack(side='top', fill='both', expand=True)
 
-        self.client = Client()
 
-    def printMsg(self, msg):
-        print(msg)
 
-'''
-    #tutaj było def logowanie()
-    def login(self):
-        try:
-            imap = imaplib.IMAP4_SSL("imap.poczta.onet.pl", 993)
-            print(self.email.get(), self.password.get(), 'login try in Main')
-            imap.login(self.email.get(), self.password.get())
-            print("Login accepted")
-            self.message['text'] = 'Login accepted'
-            self.screen.after(1000, self.screen.destroy)
-        except:
-            print(self.email.get(), self.password.get(), 'login except in Main')
-            print("An exception occurred")
-            self.message['text'] = 'Incorrect email or password'  # invalid?
-
-    # def get_label(self, variable):
-    #    self.variable = variable
-    #    return self.variable.get()
-
-    def printuj(self):
-        print(self.textA.get())
-
-    def _show_value(*pargs):
-        # print(*pargs)
-        return(root.globalgetvar(pargs[0]))
-
-    def recupere(self):
-        "Function to get the variable"
-        dev = self.dev_var.get()
-        return self.dev_var.set(dev)
-
-    def show_output(self, event):
-        print(self.entry_var.get())
-'''
 class ScrollFrame(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)  # create a frame (self)
@@ -115,16 +78,7 @@ class FetchEmail(object):
     """ZAPISUJE ZAŁĄCZNIKI NIEPRZECZYTANYCH MAILI"""
 
     # TODO: połaczyć z CNN
-    # filePath = path_to_images()
     def __init__(self, username, password):
-
-        script_path = os.path.abspath(__file__)
-        script_dir = os.path.split(script_path)[0]
-        path_dirname = script_dir.replace('\\', '/')
-        rel_path = "classification_images/chicken"
-        path = os.path.join(path_dirname, rel_path)
-        filePath = path.replace('\\', '/')
-        path = filePath
 
         self.username = username
         self.password = password
@@ -135,18 +89,11 @@ class FetchEmail(object):
         print("login accepted")
         imap.select('INBOX')
 
-        self.unread(imap)
+        # self.unread(imap)
         self.read(imap)
 
     def unread(self, imap):
-        # print(self.username, self.password)
         print('unread')
-        # self.username = username
-        # self.password = password
-        # print(self.username, self.password)
-        # imap = imaplib.IMAP4_SSL("imap.poczta.onet.pl", 993)
-        # imap.login(self.username, self.password)
-        # imap.select('INBOX')
 
         status, response = imap.search(None, '(UNSEEN)')
         unread_msg_nums = response[0].split()
@@ -160,16 +107,13 @@ class FetchEmail(object):
         imap.logout()
 
     def read(self, imap):
-        #TODO: sprawdzic czy działa zapisywanie i otwieranie path
-        print('read')
-        # self.username = username
-        # self.password = password
-        # domena = self.username.split('@')[1]
-        # domena = 'imap.poczta.' + domena
-        # imap = imaplib.IMAP4_SSL(domena, 993)
-        # imap.login(self.username, self.password)
-        # print("login accepted")
-        # imap.select("INBOX")
+        script_path = os.path.abspath(__file__)
+        script_dir = os.path.split(script_path)[0]
+        path_dirname = script_dir.replace('\\', '/')
+        rel_path = "classification_images/chicken"
+        path = os.path.join(path_dirname, rel_path)
+        filePath = path.replace('\\', '/')
+        path = filePath
         typ, data = imap.search(None, 'UNSEEN')
         for num in data[0].split():
             typ, data = imap.fetch(num, '(RFC822)')
@@ -189,8 +133,7 @@ class FetchEmail(object):
                         fp = open(filePath, 'wb')
                         fp.write(part.get_payload(decode=True))
                         fp.close()
-                        # subject = str(email_message).split("Subject: ", 1)[1].split("\nTo:", 1)[0]
-                    #  print('Downloaded "{file}" from email titled "{subject}" with UID {uid}.'.format(file=fileName, subject=subject,uid=latest_email_uid.decode('utf-8')))
+                        subject = str(email_message).split("Subject: ", 1)[1].split("\nTo:", 1)[0]
 
 class Client(object):
     """LOGOWANIE DO MAILA"""
@@ -250,9 +193,7 @@ class Client(object):
             print("Login accepted")
             self.message['text'] = 'Login accepted'
             self.screen.after(1000, self.screen.destroy)
-            print('log_in 1')
             FetchEmail(self.email.get(), self.password.get())
-            print('log_in 2')
             # self.client(self.email.get(), self.password.get())
         except:
             print("An exception occurred")
@@ -271,7 +212,7 @@ class CNN(object):
             self.model = keras.models.load_model('model.kerasave')
             self.classifier()
         except:
-            exec(open('CNN_classification.py.py').read())
+            exec(open('CNN_classification.py').read())
 
     def classifier(self):
         # TODO: sprawdzic czy działa cała funkcja: plik z maila, klasyfikacja zgodna z modelem, przeniesienie do pliku
