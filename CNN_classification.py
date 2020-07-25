@@ -44,7 +44,7 @@ print(df.head(), df.tail())
 df['category'].value_counts().plot.bar()
 plt.show()
 
-# przykładowy obrazek
+# przykladowy obrazek
 sample = random.choice(filenames)
 image = load_img(path + '/' + sample)
 plt.imshow(image)
@@ -156,7 +156,7 @@ plt.tight_layout()
 plt.show()
 
 #fit model
-epochs=3 if FAST_RUN else 50
+epochs = 3 if FAST_RUN else 50
 """
 
 sess = tf.compat.v1.Session()

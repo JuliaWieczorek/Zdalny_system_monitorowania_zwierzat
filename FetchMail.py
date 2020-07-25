@@ -23,7 +23,10 @@ class MainApplication(tk.Frame):
         print(msg)
 
     def display_images(self):
-        path_train = path_to_chicken()
+        path_train = path_to_images()
+        file = "test"
+        path_train = os.path.join(path_train, file)
+        path_train = path_train.replace('\\', '/')
         i = 0
         for name in os.listdir(path_train):
             # image = tk.PhotoImage(path + "/" + name)
@@ -33,13 +36,12 @@ class MainApplication(tk.Frame):
             path_to_image = path_to_image.replace('\\', '/')
             im = Image.open(path_to_image).resize((250, 250))
             # CNN(path_to_image) #TODO: CNN
+            Classification_images()
             ph = ImageTk.PhotoImage(im)
             label = tk.Label(self.scrollFrame.viewPort, image=ph, borderwidth="1", relief="solid")
             label.image = ph
             label.pack()
         self.scrollFrame.pack(side='top', fill='both', expand=True)
-
-
 
 class ScrollFrame(tk.Frame):
     def __init__(self, parent):
@@ -75,11 +77,10 @@ class ScrollFrame(tk.Frame):
                                width=canvas_width)  # whenever the size of the canvas changes alter the window region respectively.
 
 class FetchEmail(object):
-    """ZAPISUJE ZAŁĄCZNIKI NIEPRZECZYTANYCH MAILI"""
+    """ZAPISUJE ZAlACZNIKI NIEPRZECZYTANYCH MAILI"""
 
     # TODO: połaczyć z CNN
     def __init__(self, username, password):
-
         self.username = username
         self.password = password
         domena = self.username.split('@')[1]
@@ -110,7 +111,7 @@ class FetchEmail(object):
         script_path = os.path.abspath(__file__)
         script_dir = os.path.split(script_path)[0]
         path_dirname = script_dir.replace('\\', '/')
-        rel_path = "classification_images/chicken"
+        rel_path = "classification_images/cats_and_dogs_filtered/test"
         path = os.path.join(path_dirname, rel_path)
         filePath = path.replace('\\', '/')
         path = filePath
@@ -199,41 +200,58 @@ class Client(object):
             print("An exception occurred")
             self.message['text'] = 'Incorrect email or password'
 
-class CNN(object):
-    # TODO: sprawdzić czy działa
+class Classification_images(object):
+    # TODO: sprawdzic czy dziala
 
-    def __init__(self, path_img):
+    def __init__(self):
         import keras
         import tensorflow as tf
-        self.path_img = path_img
+        self.path_img = path_to_images()
+        file = 'test'
+        self.path_img = os.path.join(self.path_img, file)
 
         try:
             self.sess = tf.compat.v1.Session()
-            self.model = keras.models.load_model('model.kerasave')
+            self.script_path = os.path.abspath(__file__)
+            self.script_dir = os.path.split(self.script_path)[0]
+            self.path_dirname = self.script_dir.replace('\\', '/')
+            self.rel_path = "classification_images/cats_and_dogs_filteredresults/"
+            self.path = os.path.join(self.path_dirname, self.rel_path)
+            self.path = self.path.replace('\\', '/')
+            self.file_model = os.path.join(self.path, 'model.kerasave')
+            # self.model = keras.models.load_model('model.kerasave')
+            self.model = keras.models.load_model(self.file_model)
             self.classifier()
         except:
-            exec(open('CNN_classification.py').read())
+            # exec(open('CNN_classification.py').read())
+            print("klasyfikacja except")
 
     def classifier(self):
-        # TODO: sprawdzic czy działa cała funkcja: plik z maila, klasyfikacja zgodna z modelem, przeniesienie do pliku
-
+        # TODO: sprawdzic czy działa cala funkcja: plik z maila, klasyfikacja zgodna z modelem, przeniesienie do pliku
         exec(open("functions.py").read())
         import numpy as np
 
-        _, _, _, _, labels = setup_load_cifar()
+        # _, _, _, _, labels = setup_load_cifar()
+        print('clas1')
+        # TODO: tu cos nagrzmociłam
+        predict = model.predict_generator(test_generator, steps=np.ceil(nb_samples/batch_size))
+        test_df['category'] = np.argmax(predict, axis=-1)
+        label_map = dict((v, k) for k, v in train_generator.class_indices.items())
+        test_df['category'] = test_df['category'].replace(label_map)
+        test_df['category'] = test_df['category'].replace({'dog': 1, 'cat': 0})
 
         self.image = tf.io.read_file(self.path_img)
-        self.img = tf.image.decode_jpeg(self.image, channels=3)
-        self.img.set_shape([None, None, 3])
-        self.img = tf.image.resize(self.img, (32, 32))
+        self.image = tf.image.decode_jpeg(self.image, channels=3)
+        self.image.set_shape([None, None, 3])
+        self.image = tf.image.resize(self.img, (32, 32))
         from keras.preprocessing import image
-        self.img = image.img_to_array(self.img)  # convert to numpy array
-        self.img = np.expand_dims(self.img, 0)  # make 'batch' of 1
+        self.image = image.img_to_array(self.img)  # convert to numpy array
+        self.image = np.expand_dims(self.img, 0)  # make 'batch' of 1
 
-        self.pred = self.model.predict(self.img)
-        self.pred = labels["label_names"][np.argmax(self.pred)]
+        self.pred = self.model.predict(self.image)
+        self.pred = categories["label_names"][np.argmax(self.pred)]
         print(self.pred)
-        shutil.move(self.image, self.path_imgh+self.pred)
+        shutil.move(self.image, self.path_img+self.pred)
 
 
 # server = 'imap.poczta.onet.pl'

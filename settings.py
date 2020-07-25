@@ -13,7 +13,7 @@ def path_to_images():
     script_path = os.path.abspath(__file__)
     script_dir = os.path.split(script_path)[0]
     path_dirname = script_dir.replace('\\', '/')
-    rel_path = "classification_images/cats_and_dogs_filtered"
+    rel_path = "classification_images/cats_and_dogs_filtered/"
     path = os.path.join(path_dirname, rel_path)
     path = path.replace('\\', '/')
     return path
