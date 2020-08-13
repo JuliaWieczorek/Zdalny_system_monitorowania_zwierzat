@@ -1,10 +1,18 @@
 import email
 import imaplib
 import tkinter as tk
+from typing import List, Union
+
 from PIL import Image, ImageTk
 import os
 import shutil
-from settings import path_to_images, path_to_chicken
+
+from settings import path_to_images
+
+import pandas as pd
+from keras.preprocessing.image import load_img
+from keras.preprocessing.image import img_to_array
+from keras.models import load_model
 
 class MainApplication(tk.Frame):
     """TWORZY INTERFEJS PROGRAMU
@@ -34,9 +42,9 @@ class MainApplication(tk.Frame):
             # im = Image.open(path + "/" + name).resize((250, 250))
             path_to_image = os.path.join(path_train, name)
             path_to_image = path_to_image.replace('\\', '/')
+            Classification_images(path_to_image)
             im = Image.open(path_to_image).resize((250, 250))
             # CNN(path_to_image) #TODO: CNN
-            Classification_images()
             ph = ImageTk.PhotoImage(im)
             label = tk.Label(self.scrollFrame.viewPort, image=ph, borderwidth="1", relief="solid")
             label.image = ph
@@ -108,13 +116,18 @@ class FetchEmail(object):
         imap.logout()
 
     def read(self, imap):
-        script_path = os.path.abspath(__file__)
-        script_dir = os.path.split(script_path)[0]
-        path_dirname = script_dir.replace('\\', '/')
-        rel_path = "classification_images/cats_and_dogs_filtered/test"
-        path = os.path.join(path_dirname, rel_path)
-        filePath = path.replace('\\', '/')
-        path = filePath
+        path_train = path_to_images()
+        file = "test"
+        path_train = os.path.join(path_train, file)
+        path_train = path_train.replace('\\', '/')
+
+        # script_path = os.path.abspath(__file__)
+        # script_dir = os.path.split(script_path)[0]
+        # path_dirname = script_dir.replace('\\', '/')
+        # rel_path = "classification_images/cats_and_dogs_filtered/test"
+        # path = os.path.join(path_dirname, rel_path)
+        # filePath = path.replace('\\', '/')
+        path = path_train
         typ, data = imap.search(None, 'UNSEEN')
         for num in data[0].split():
             typ, data = imap.fetch(num, '(RFC822)')
@@ -201,57 +214,42 @@ class Client(object):
             self.message['text'] = 'Incorrect email or password'
 
 class Classification_images(object):
-    # TODO: sprawdzic czy dziala
 
-    def __init__(self):
-        import keras
-        import tensorflow as tf
-        self.path_img = path_to_images()
-        file = 'test'
-        self.path_img = os.path.join(self.path_img, file)
+    def __init__(self, img):
+        self.img = img
+        self.classifier()
 
-        try:
-            self.sess = tf.compat.v1.Session()
-            self.script_path = os.path.abspath(__file__)
-            self.script_dir = os.path.split(self.script_path)[0]
-            self.path_dirname = self.script_dir.replace('\\', '/')
-            self.rel_path = "classification_images/cats_and_dogs_filteredresults/"
-            self.path = os.path.join(self.path_dirname, self.rel_path)
-            self.path = self.path.replace('\\', '/')
-            self.file_model = os.path.join(self.path, 'model.kerasave')
-            # self.model = keras.models.load_model('model.kerasave')
-            self.model = keras.models.load_model(self.file_model)
-            self.classifier()
-        except:
-            # exec(open('CNN_classification.py').read())
-            print("klasyfikacja except")
+    # load and prepare the image
+    def load_image(self, filename):
+        # load the image
+        path_train = path_to_images()
+        path_file = os.path.join(path_train, 'test')
+        path_file = os.path.join(path_file, filename)
+        path_file = path_file.replace('\\', '/')
+        img = load_img(path_file, target_size=(224, 224))
+        # convert to array
+        img = img_to_array(img)
+        # reshape into a single sample with 3 channels
+        img = img.reshape(1, 224, 224, 3)
+        # center pixel data
+        img = img.astype('float32')
+        img = img - [123.68, 116.779, 103.939]
+        return img
 
+    # load an image and predict the class
     def classifier(self):
-        # TODO: sprawdzic czy działa cala funkcja: plik z maila, klasyfikacja zgodna z modelem, przeniesienie do pliku
-        exec(open("functions.py").read())
-        import numpy as np
-
-        # _, _, _, _, labels = setup_load_cifar()
-        print('clas1')
-        # TODO: tu cos nagrzmociłam
-        predict = model.predict_generator(test_generator, steps=np.ceil(nb_samples/batch_size))
-        test_df['category'] = np.argmax(predict, axis=-1)
-        label_map = dict((v, k) for k, v in train_generator.class_indices.items())
-        test_df['category'] = test_df['category'].replace(label_map)
-        test_df['category'] = test_df['category'].replace({'dog': 1, 'cat': 0})
-
-        self.image = tf.io.read_file(self.path_img)
-        self.image = tf.image.decode_jpeg(self.image, channels=3)
-        self.image.set_shape([None, None, 3])
-        self.image = tf.image.resize(self.img, (32, 32))
-        from keras.preprocessing import image
-        self.image = image.img_to_array(self.img)  # convert to numpy array
-        self.image = np.expand_dims(self.img, 0)  # make 'batch' of 1
-
-        self.pred = self.model.predict(self.image)
-        self.pred = categories["label_names"][np.argmax(self.pred)]
-        print(self.pred)
-        shutil.move(self.image, self.path_img+self.pred)
+        # TODO: sprawdzic czy działa cala funkcja: plik z maila,  przeniesienie do pliku
+        # load the image
+        img = self.load_image(self.img)
+        # load model
+        # model = load_model('final_model.h5')
+        model = load_model('model.h5')
+        # predict the class
+        result = model.predict(img)
+        if result[0] == [1.]:
+            print('dog')
+        else:
+            print('cat')
 
 
 # server = 'imap.poczta.onet.pl'

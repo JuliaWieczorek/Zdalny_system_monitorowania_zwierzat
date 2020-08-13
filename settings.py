@@ -13,38 +13,38 @@ def path_to_images():
     script_path = os.path.abspath(__file__)
     script_dir = os.path.split(script_path)[0]
     path_dirname = script_dir.replace('\\', '/')
-    rel_path = "classification_images/cats_and_dogs_filtered/"
+    rel_path = "images"
     path = os.path.join(path_dirname, rel_path)
     path = path.replace('\\', '/')
     return path
 
-def path_to_chicken():
-    script_path = os.path.abspath(__file__)
-    script_dir = os.path.split(script_path)[0]
-    path_dirname = script_dir.replace('\\', '/')
-    rel_path = "classification_images/chicken"
-    path = os.path.join(path_dirname, rel_path)
-    filePath = path.replace('\\', '/')
-    return filePath
+# def path_to_chicken():
+  #   script_path = os.path.abspath(__file__)
+  #   script_dir = os.path.split(script_path)[0]
+  #   path_dirname = script_dir.replace('\\', '/')
+  #   rel_path = "classification_images/chicken"
+  #   path = os.path.join(path_dirname, rel_path)
+  #   filePath = path.replace('\\', '/')
+  #   return filePath
 
 x = path_to_images()
-save_dir = x + 'work'
-res_dir = x + 'results'
-model_name = x + 'model'
+# save_dir = x + 'work'
+# res_dir = x + 'results'
+# model_name = x + 'model'
 
 # setup paths
-import os
+# import os
 
-ckpt_dir = os.path.join(save_dir,"checkpoints")
-if not os.path.isdir(ckpt_dir):
-    os.makedirs(ckpt_dir)
+# ckpt_dir = os.path.join(save_dir,"checkpoints")
+# if not os.path.isdir(ckpt_dir):
+ #   os.makedirs(ckpt_dir)
 
 ### moje
-if not os.path.isdir(res_dir):
-    os.makedirs(os.path.join(res_dir))
+# if not os.path.isdir(res_dir):
+#  os.makedirs(os.path.join(res_dir))
 
-if not os.path.isdir(model_name):
-    os.makedirs(os.path.join(model_name))
+# if not os.path.isdir(model_name):
+#    os.makedirs(os.path.join(model_name))
 
-model_path = os.path.join(res_dir, model_name + ".kerasave")
-hist_path = os.path.join(res_dir, model_name + ".kerashist")
+# model_path = os.path.join(res_dir, model_name + ".kerasave")
+# hist_path = os.path.join(res_dir, model_name + ".kerashist")
