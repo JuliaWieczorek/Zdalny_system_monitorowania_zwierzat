@@ -2,6 +2,8 @@ import email
 import imaplib
 import tkinter as tk
 from tkinter import ttk
+from tkinter import *
+from ttkthemes import ThemedTk
 from typing import List, Union
 
 from PIL import Image, ImageTk
@@ -24,9 +26,11 @@ class MainApplication(tk.Frame):
         tk.Frame.__init__(self, root)
         root.title("Animal monitoring system")
         bg_image = tk.PhotoImage(file="background-869596_1280.png")
-        self.button1 = tk.Button(root, text="Display images", command=self.display_images).pack()
+        self.button1 = ttk.Button(root, text="Display images", command=self.display_images).pack()
         self.progress_bar = ttk.Progressbar(root, orient="horizontal", length=200, mode="determinate")
         self.progress_bar.pack()
+        self.statusbar = tk.Label(root, text='Welcome', relief=SUNKEN, anchor=W, font='Times 10 italic')
+        self.statusbar.pack(side=BOTTOM, fill=X)
         self.bytes = 0
         self.maxbytes = 0
         self.scrollFrame = ScrollFrame(self)
@@ -44,24 +48,24 @@ class MainApplication(tk.Frame):
         self.progress_bar["maximum"] = self.maxbytes
         self.bytes = 0
 
-        for name in os.listdir(path_train):
-            path_to_image = os.path.join(path_train, name)
-            path_to_image = path_to_image.replace('\\', '/')
-            im = Image.open(path_to_image).resize((250, 250))
-            ph = ImageTk.PhotoImage(im)
-            label = tk.Label(self.scrollFrame.viewPort, image=ph, borderwidth="1", relief="solid")
-            label.image = ph
-            label.pack()
-            text = Classification_images(path_to_image)
-            label1 = tk.Label(self.scrollFrame.viewPort, text=text.classifier())
-            label1.pack()
-            self.bytes += 1
-            self.progress_bar["value"] = self.bytes
-            self.progress_bar.update()
-
-        self.scrollFrame.pack(side='top', fill='both', expand=True)
-
-
+        if num_dir == 0:
+            self.statusbar['text'] = 'No new photos'
+        else:
+            for name in os.listdir(path_train):
+                path_to_image = os.path.join(path_train, name)
+                path_to_image = path_to_image.replace('\\', '/')
+                im = Image.open(path_to_image).resize((250, 250))
+                ph = ImageTk.PhotoImage(im)
+                label = tk.Label(self.scrollFrame.viewPort, image=ph, borderwidth="1", relief="solid")
+                label.image = ph
+                label.pack()
+                text = Classification_images(path_to_image)
+                label1 = tk.Label(self.scrollFrame.viewPort, text=text.classifier())
+                label1.pack()
+                self.bytes += 1
+                self.progress_bar["value"] = self.bytes
+                self.progress_bar.update()
+            self.scrollFrame.pack(side='top', fill='both', expand=True)
 
 class ScrollFrame(tk.Frame):
     def __init__(self, parent):
@@ -154,15 +158,17 @@ class FetchEmail(object):
                         subject = str(email_message).split("Subject: ", 1)[1].split("\nTo:", 1)[0]
 
 class Client(object):
-    """LOGOWANIE DO MAILA"""
+    """
+    PANEL LOGOWANIA
+    LOGOWANIE DO MAILA
+    """
 
     ID_default = 1
     list_of_clients = []
 
     def __init__(self):
-        # self.screen = tk.Tk()
-        self.screen = tk.Toplevel()
-        self.screen.title("Log in")  # panel logowania
+        self.screen = tk.Toplevel(root)
+        self.screen.title("Log in")
         # Gets the requested values of the height and widht.
         windowWidth = root.winfo_reqwidth()
         windowHeight = root.winfo_reqheight()
@@ -170,27 +176,41 @@ class Client(object):
         positionDown = int(self.screen.winfo_screenheight() / 2 - windowHeight / 2)
         # Positions the window in the center of the page.
         self.screen.geometry("250x160+{}+{}".format(positionRight, positionDown))
-        self.screen.configure(background='dim gray')
         # screen.geometry("210x170")
         self.screen.grid_columnconfigure(0, weight=1)
         self.screen.grid_rowconfigure(0, weight=1)
-        tk.Label(self.screen, text=' ', bg='dim gray').grid(column=0, row=1)
+        tk.Label(self.screen, text=' ').grid(column=0, row=1)
 
-        tk.Label(self.screen, text="email", bg='dim gray').grid(column=0, row=2)
-        self.email = tk.Entry(self.screen, width=20)
+        tk.Label(self.screen, text="email").grid(column=0, row=2)
+        self.email = ttk.Entry(self.screen, width=20)
         self.email.grid(column=1, row=2)
 
-        tk.Label(self.screen, text='password', bg='dim gray').grid(column=0, row=3)
-        self.password = tk.Entry(self.screen, width=20)
+        tk.Label(self.screen, text='password').grid(column=0, row=3)
+        self.password = ttk.Entry(self.screen, width=20, show='*')
         self.password.grid(column=1, row=3)
 
-        tk.Label(self.screen, text=' ', bg='dim gray').grid(column=4, row=4)
-        tk.Button(self.screen, text="Log in", command=self.log_in, bg='AntiqueWhite2').grid(columnspan=4, row=5)
+        tk.Label(self.screen, text='show password').grid(column=0, row=4)
+        self.var = tk.IntVar()
+        self.bt = tk.Checkbutton(self.screen, command=self.mark, offvalue=0, onvalue=1, variable=self.var)
+        self.bt.grid(column=1, row=4)
 
-        self.message = tk.Label(self.screen, bg='dim gray')
-        self.message.grid(columnspan=4, row=7)
+        tk.Label(self.screen, text=' ').grid(column=4, row=4)
+        # tk.Button(self.screen, text="Log in", command=self.log_in, bg='AntiqueWhite2').grid(columnspan=4, row=5)
+        ttk.Button(self.screen, text="Log in", command=self.log_in).grid(columnspan=4, row=5)
+
+
+        # self.message = tk.Label(self.screen, bg='dim gray')
+        self.message = ttk.Label(self.screen)
+        self.message.grid(columnspan=4, row=8)
 
         # self.screen.call('wm', 'attributes', '.', '-topmost', '1')
+
+    def mark(self):
+        """show password- change '*' into letters"""
+        if self.var.get() == 1:
+            self.password.configure(show="")
+        elif self.var.get() == 0:
+            self.password.configure(show="*")
 
     def client(self, mail, password):
         self.client_ID = Client.ID_default
@@ -268,8 +288,8 @@ class Classification_images(object):
 # h: mgr.Photo.Trap.1
 # path = 'images'
 if __name__ == "__main__":
-    root = tk.Tk()
-    bg_image = tk.PhotoImage(file="background-869596_1280.png")
+    # root = tk.Tk()
+    root = ThemedTk(theme="clearlooks")
     path = path_to_images()
-    MainApplication(root, bg=bg_image).pack(side="top", fill="both", expand=True)
+    MainApplication(root).pack(side="top", fill="both", expand=True)
     root.mainloop()
