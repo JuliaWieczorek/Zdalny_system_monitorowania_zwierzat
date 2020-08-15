@@ -1,6 +1,7 @@
 import email
 import imaplib
 import tkinter as tk
+from tkinter import ttk
 from typing import List, Union
 
 from PIL import Image, ImageTk
@@ -24,32 +25,43 @@ class MainApplication(tk.Frame):
         root.title("Animal monitoring system")
         bg_image = tk.PhotoImage(file="background-869596_1280.png")
         self.button1 = tk.Button(root, text="Display images", command=self.display_images).pack()
+        self.progress_bar = ttk.Progressbar(root, orient="horizontal", length=200, mode="determinate")
+        self.progress_bar.pack()
+        self.bytes = 0
+        self.maxbytes = 0
         self.scrollFrame = ScrollFrame(self)
         self.client = Client()
-
-    def printMsg(self, msg):
-        print(msg)
 
     def display_images(self):
         path_train = path_to_images()
         file = "test"
         path_train = os.path.join(path_train, file)
         path_train = path_train.replace('\\', '/')
-        i = 0
+
+        self.progress_bar["value"] = 0
+        num_dir = len([name for name in os.listdir(path_train) if os.path.isfile(os.path.join(path_train, name))])
+        self.maxbytes = num_dir
+        self.progress_bar["maximum"] = self.maxbytes
+        self.bytes = 0
+
         for name in os.listdir(path_train):
-            # image = tk.PhotoImage(path + "/" + name)
-            # DetectionImage.detection()
-            # im = Image.open(path + "/" + name).resize((250, 250))
             path_to_image = os.path.join(path_train, name)
             path_to_image = path_to_image.replace('\\', '/')
-            Classification_images(path_to_image)
             im = Image.open(path_to_image).resize((250, 250))
-            # CNN(path_to_image) #TODO: CNN
             ph = ImageTk.PhotoImage(im)
             label = tk.Label(self.scrollFrame.viewPort, image=ph, borderwidth="1", relief="solid")
             label.image = ph
             label.pack()
+            text = Classification_images(path_to_image)
+            label1 = tk.Label(self.scrollFrame.viewPort, text=text.classifier())
+            label1.pack()
+            self.bytes += 1
+            self.progress_bar["value"] = self.bytes
+            self.progress_bar.update()
+
         self.scrollFrame.pack(side='top', fill='both', expand=True)
+
+
 
 class ScrollFrame(tk.Frame):
     def __init__(self, parent):
@@ -87,7 +99,6 @@ class ScrollFrame(tk.Frame):
 class FetchEmail(object):
     """ZAPISUJE ZAlACZNIKI NIEPRZECZYTANYCH MAILI"""
 
-    # TODO: połaczyć z CNN
     def __init__(self, username, password):
         self.username = username
         self.password = password
@@ -120,13 +131,6 @@ class FetchEmail(object):
         file = "test"
         path_train = os.path.join(path_train, file)
         path_train = path_train.replace('\\', '/')
-
-        # script_path = os.path.abspath(__file__)
-        # script_dir = os.path.split(script_path)[0]
-        # path_dirname = script_dir.replace('\\', '/')
-        # rel_path = "classification_images/cats_and_dogs_filtered/test"
-        # path = os.path.join(path_dirname, rel_path)
-        # filePath = path.replace('\\', '/')
         path = path_train
         typ, data = imap.search(None, 'UNSEEN')
         for num in data[0].split():
@@ -217,9 +221,8 @@ class Classification_images(object):
 
     def __init__(self, img):
         self.img = img
-        self.classifier()
 
-    # load and prepare the image
+        # load and prepare the image
     def load_image(self, filename):
         # load the image
         path_train = path_to_images()
@@ -238,7 +241,6 @@ class Classification_images(object):
 
     # load an image and predict the class
     def classifier(self):
-        # TODO: sprawdzic czy działa cala funkcja: plik z maila,  przeniesienie do pliku
         # load the image
         img = self.load_image(self.img)
         # load model
@@ -246,10 +248,16 @@ class Classification_images(object):
         model = load_model('model.h5')
         # predict the class
         result = model.predict(img)
-        if result[0] == [1.]:
-            print('dog')
+        self.clas = tk.StringVar()
+        if result[0] == [0.]:
+            self.clas = 'dog'
+            dest = "images/final/dogs"
+            shutil.move(self.img, dest)
         else:
-            print('cat')
+            self.clas = 'cat'
+            dest = "images/final/cats"
+            shutil.move(self.img, dest)
+        return (self.clas)
 
 
 # server = 'imap.poczta.onet.pl'
@@ -258,14 +266,10 @@ class Classification_images(object):
 
 # e: photo.trap@onet.pl
 # h: mgr.Photo.Trap.1
-path = 'images'
+# path = 'images'
 if __name__ == "__main__":
     root = tk.Tk()
     bg_image = tk.PhotoImage(file="background-869596_1280.png")
     path = path_to_images()
     MainApplication(root, bg=bg_image).pack(side="top", fill="both", expand=True)
-    # background = tk.Label(image=bg_image)
-    # background.image = bg_image
-    # background.pack()
-
     root.mainloop()
