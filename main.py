@@ -23,6 +23,7 @@ class MainApplication(tk.Frame):
         # tk.Frame.__init__(self, parent, *args, **kwargs)
         tk.Frame.__init__(self, root)
         root.title("Animal monitoring system")
+        root.iconbitmap('icon.ico')
         self.button1 = ttk.Button(root, text="Display images", command=self.display_images).pack()
         self.progress_bar = ttk.Progressbar(root, orient="horizontal", length=200, mode="determinate")
         self.progress_bar.pack()
@@ -168,6 +169,7 @@ class Client(object):
     def __init__(self):
         self.screen = tk.Toplevel(root)
         self.screen.title("Log in")
+        self.screen.iconbitmap('icon.ico')
         # Gets the requested values of the height and width.
         windowWidth = root.winfo_reqwidth()
         windowHeight = root.winfo_reqheight()
