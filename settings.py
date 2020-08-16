@@ -1,6 +1,3 @@
-#1.
-#settings.py
-
 import os
 
 def path_to_images():

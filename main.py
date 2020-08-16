@@ -4,7 +4,6 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import *
 from ttkthemes import ThemedTk
-from typing import List, Union
 
 from PIL import Image, ImageTk
 import os
@@ -12,7 +11,6 @@ import shutil
 
 from settings import path_to_images
 
-import pandas as pd
 from keras.preprocessing.image import load_img
 from keras.preprocessing.image import img_to_array
 from keras.models import load_model
@@ -25,7 +23,6 @@ class MainApplication(tk.Frame):
         # tk.Frame.__init__(self, parent, *args, **kwargs)
         tk.Frame.__init__(self, root)
         root.title("Animal monitoring system")
-        bg_image = tk.PhotoImage(file="background-869596_1280.png")
         self.button1 = ttk.Button(root, text="Display images", command=self.display_images).pack()
         self.progress_bar = ttk.Progressbar(root, orient="horizontal", length=200, mode="determinate")
         self.progress_bar.pack()
@@ -49,8 +46,9 @@ class MainApplication(tk.Frame):
         self.bytes = 0
 
         if num_dir == 0:
-            self.statusbar['text'] = 'No new photos'
+            self.statusbar['text'] = 'Nothing new'
         else:
+            self.statusbar['text'] = 'Loading...'
             for name in os.listdir(path_train):
                 path_to_image = os.path.join(path_train, name)
                 path_to_image = path_to_image.replace('\\', '/')
@@ -66,6 +64,7 @@ class MainApplication(tk.Frame):
                 self.progress_bar["value"] = self.bytes
                 self.progress_bar.update()
             self.scrollFrame.pack(side='top', fill='both', expand=True)
+            self.statusbar['text'] = ' '
 
 class ScrollFrame(tk.Frame):
     def __init__(self, parent):
@@ -101,7 +100,7 @@ class ScrollFrame(tk.Frame):
                                width=canvas_width)  # whenever the size of the canvas changes alter the window region respectively.
 
 class FetchEmail(object):
-    """ZAPISUJE ZAlACZNIKI NIEPRZECZYTANYCH MAILI"""
+    """ZAPISUJE ZALACZNIKI NIEPRZECZYTANYCH MAILI"""
 
     def __init__(self, username, password):
         self.username = username
@@ -169,7 +168,7 @@ class Client(object):
     def __init__(self):
         self.screen = tk.Toplevel(root)
         self.screen.title("Log in")
-        # Gets the requested values of the height and widht.
+        # Gets the requested values of the height and width.
         windowWidth = root.winfo_reqwidth()
         windowHeight = root.winfo_reqheight()
         positionRight = int(self.screen.winfo_screenwidth() / 2 - windowWidth / 2)
@@ -264,12 +263,12 @@ class Classification_images(object):
         # load the image
         img = self.load_image(self.img)
         # load model
-        # model = load_model('final_model.h5')
-        model = load_model('model.h5')
+        model = load_model('final_model.h5')
+        # model = load_model('model.h5')
         # predict the class
         result = model.predict(img)
         self.clas = tk.StringVar()
-        if result[0] == [0.]:
+        if result[0] > [0.5]:
             self.clas = 'dog'
             dest = "images/final/dogs"
             shutil.move(self.img, dest)
@@ -281,14 +280,10 @@ class Classification_images(object):
 
 
 # server = 'imap.poczta.onet.pl'
-# username = 'mgrphototrap@onet.pl'
-# password = 'Mgr.Photo.Trap.1'
-
 # e: photo.trap@onet.pl
 # h: mgr.Photo.Trap.1
 # path = 'images'
 if __name__ == "__main__":
-    # root = tk.Tk()
     root = ThemedTk(theme="clearlooks")
     path = path_to_images()
     MainApplication(root).pack(side="top", fill="both", expand=True)
